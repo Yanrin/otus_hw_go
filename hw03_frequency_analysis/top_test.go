@@ -83,7 +83,7 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(textSpec))
 		} else {
 			expected := []string{
-				"το",  // 2
+				"το",    // 2
 				"666",   // 1
 				"ghj",   // 1
 				"ghj98", // 1
