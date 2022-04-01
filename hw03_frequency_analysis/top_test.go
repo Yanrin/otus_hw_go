@@ -164,10 +164,10 @@ func TestTop10(t *testing.T) {
 
 func TestMin(t *testing.T) {
 	t.Run("only one element", func(t *testing.T) {
-		require.Equal(t, Min(5), 5)
+		require.Equal(t, min(5), 5)
 	})
 
 	t.Run("several elements", func(t *testing.T) {
-		require.Equal(t, Min(58, -26, 0, 5), -26)
+		require.Equal(t, min(58, -26, 0, 5), -26)
 	})
 }

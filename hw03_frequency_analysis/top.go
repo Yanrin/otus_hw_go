@@ -21,7 +21,7 @@ var (
 
 // Top10 returns 10 most common words of the string.
 func Top10(str string) []string {
-	mappedWords := make(map[string]int, 0)
+	mappedWords := make(map[string]int)
 	for _, word := range strings.Fields(str) { // count all words
 		if AsteriskIsCompleted {
 			word = strings.ToLower(reClearWord.ReplaceAllString(word, ""))
@@ -42,7 +42,7 @@ func Top10(str string) []string {
 	sort.SliceStable(ws, func(i, j int) bool { // sorting by count
 		return ws[i].Count > ws[j].Count
 	})
-	resultLen := Min(OutputSliceLength, len(ws))
+	resultLen := min(OutputSliceLength, len(ws))
 	result := make([]string, 0)
 	for _, el := range ws[:resultLen] {
 		result = append(result, el.Word)
@@ -50,8 +50,8 @@ func Top10(str string) []string {
 	return result
 }
 
-// Min returns the entry in the list with the smallest numerical value.
-func Min(el int, elements ...int) int {
+// min returns the entry in the list with the smallest numerical value.
+func min(el int, elements ...int) int {
 	min := el
 	for _, el := range elements {
 		if el < min {
