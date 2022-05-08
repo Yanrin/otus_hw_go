@@ -50,7 +50,46 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(3)
+
+		c.Set("aaa", 100) // [aaa-100]
+		c.Set("bbb", 200) // [bbb-200, aaa-100]
+		c.Set("ccc", 300) // [ccc-300, bbb-200, aaa-100]
+		c.Set("ddd", 400) // [ddd-400, ccc-300, bbb-200]
+
+		val, ok := c.Get("bbb")
+		require.True(t, ok)
+		require.Equal(t, 200, val)
+
+		val, ok = c.Get("ccc")
+		require.True(t, ok)
+		require.Equal(t, 300, val)
+
+		val, ok = c.Get("ddd") // [ddd-400, ccc-300, bbb-200]
+		require.True(t, ok)
+		require.Equal(t, 400, val)
+
+		_, ok = c.Get("aaa") // expelled as the most unused
+		require.False(t, ok)
+
+		c.Set("ccc", 600) // [ccc-600, ddd-400, bbb-200]
+		c.Get("bbb")      // [bbb-200, ccc-600, ddd-400]
+		c.Set("eee", 800) // [eee-800, bbb-200, ccc-600]
+
+		val, ok = c.Get("ccc")
+		require.True(t, ok)
+		require.Equal(t, 600, val)
+
+		val, ok = c.Get("bbb")
+		require.True(t, ok)
+		require.Equal(t, 200, val)
+
+		val, ok = c.Get("eee") // [eee-800, bbb-200, ccc-600]
+		require.True(t, ok)
+		require.Equal(t, 800, val)
+
+		_, ok = c.Get("ddd") // expelled as the most unused
+		require.False(t, ok)
 	})
 }
 

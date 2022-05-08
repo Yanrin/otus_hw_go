@@ -15,6 +15,19 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("remove", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10) // [10]
+		middle := l.Front()
+		l.Remove(middle)
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+		require.Nil(t, middle.Next)
+		require.Nil(t, middle.Prev)
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
@@ -34,18 +47,45 @@ func TestList(t *testing.T) {
 				l.PushBack(v)
 			}
 		} // [80, 60, 40, 10, 30, 50, 70]
-
 		require.Equal(t, 7, l.Len())
 		require.Equal(t, 80, l.Front().Value)
 		require.Equal(t, 70, l.Back().Value)
-
 		l.MoveToFront(l.Front()) // [80, 60, 40, 10, 30, 50, 70]
 		l.MoveToFront(l.Back())  // [70, 80, 60, 40, 10, 30, 50]
-
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
 			elems = append(elems, i.Value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
+	})
+}
+
+func TestMoveToFront(t *testing.T) {
+	t.Run("from the middle of the queue", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10)              // [10]
+		l.PushFront(20)              // [20, 10]
+		l.PushFront(30)              // [30, 20, 10]
+		l.PushFront(40)              // [40, 30, 20, 10]
+		l.MoveToFront(l.Back().Prev) // Move 20
+
+		elems := make([]int, 0, l.Len())
+		for i := l.Front(); i != nil; i = i.Next {
+			elems = append(elems, i.Value.(int))
+		}
+		require.Equal(t, []int{20, 40, 30, 10}, elems)
+	})
+	t.Run("from and into single element queue", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10) // [10]
+		l.MoveToFront(l.Back())
+
+		elems := make([]int, 0, l.Len())
+		for i := l.Front(); i != nil; i = i.Next {
+			elems = append(elems, i.Value.(int))
+		}
+		require.Equal(t, []int{10}, elems)
 	})
 }
