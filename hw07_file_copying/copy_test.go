@@ -56,7 +56,7 @@ func TestCopyMainProcess(t *testing.T) {
 	t.Run("common case", func(t *testing.T) {
 		Copy(fileFrom, fileTo, offset, limit)
 
-		require.True(t, filesEqual(fileFrom, fileTo))
+		require.Equal(t, fileSize(fileFrom), fileSize(fileTo))
 	})
 
 	t.Run("same files", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestCopyMainProcess(t *testing.T) {
 		fileFrom := smallfile
 		Copy(fileFrom, fileTo, offset, limit)
 
-		require.True(t, filesEqual(fileFrom, fileTo))
+		require.Equal(t, fileSize(fileFrom), fileSize(fileTo))
 	})
 
 	t.Run("limit < buff", func(t *testing.T) {
@@ -115,7 +115,7 @@ func TestCopyMainProcess(t *testing.T) {
 
 		Copy(fileFrom, fileTo, offset, limit)
 
-		require.True(t, filesEqual(fileFrom, fileTo))
+		require.Equal(t, fileSize(fileFrom), fileSize(fileTo))
 	})
 
 	t.Run("size = 0", func(t *testing.T) {
@@ -123,12 +123,8 @@ func TestCopyMainProcess(t *testing.T) {
 
 		Copy(fileFrom, fileTo, offset, limit)
 
-		require.True(t, filesEqual(fileFrom, fileTo))
+		require.Equal(t, fileSize(fileFrom), fileSize(fileTo))
 	})
-}
-
-func filesEqual(path1, path2 string) bool {
-	return fileSize(path1) == fileSize(path2)
 }
 
 func fileSize(filePath string) int64 {

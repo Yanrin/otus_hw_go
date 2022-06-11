@@ -40,7 +40,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	defer toFile.Close()
 
 	buff := make([]byte, BuffLen)
-	offsetCurrent := int64(0)
+	offsetCurrent := offset
 
 	pbCount := fs.From.Size()
 	if limit > 0 && limit < pbCount {
@@ -52,8 +52,8 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	for {
 		readLen, err := fromFile.ReadAt(buff, offsetCurrent)
 		offsetCurrent += int64(readLen)
-		if limit > 0 && offsetCurrent >= limit { // for limited reading
-			writeLen := limit - offsetCurrent + int64(readLen)
+		if limit > 0 && offsetCurrent >= limit + offset { // for limited reading
+			writeLen := limit + offset - offsetCurrent + int64(readLen)
 			pb.Add(writeLen)
 
 			if _, err = toFile.Write(buff[:writeLen]); err != nil {
