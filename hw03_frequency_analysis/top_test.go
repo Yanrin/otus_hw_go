@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = AsteriskIsCompleted
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -43,9 +43,90 @@ var text = `Как видите, он  спускается  по  лестни�
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
 
+var textSpec = "666\tτο ghj rfv ghj98\nr😻fv ¥¥ το στο."
+
+var textLexical = `ggg ggg ggg ggg 
+ccc ccc ccc ccc 
+bbb bbb bbb bbb 
+hhh hhh hhh hhh 
+iii iii iii iii 
+ddd ddd ddd ddd 
+eee eee eee eee 
+kkk kkk kkk kkk 
+aaa aaa
+fff fff fff fff 
+jjj jjj jjj jjj`
+
+var textCase = `Опыт vs опыт`
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
+	})
+
+	t.Run("short slice", func(t *testing.T) {
+		if taskWithAsteriskIsCompleted {
+			require.Len(t, Top10(textSpec), 4)
+		} else {
+			require.Len(t, Top10(textSpec), 8)
+		}
+	})
+
+	t.Run("specsymbols and greek alphabet", func(t *testing.T) {
+		if taskWithAsteriskIsCompleted {
+			expected := []string{
+				"ghj", // 2
+				"rfv", // 2
+				"το",  // 2
+				"στο", // 1
+			}
+			require.Equal(t, expected, Top10(textSpec))
+		} else {
+			expected := []string{
+				"το",    // 2
+				"666",   // 1
+				"ghj",   // 1
+				"ghj98", // 1
+				"rfv",   // 1
+				"r😻fv",  // 1
+				"¥¥",    // 1
+				"στο.",  // 1
+			}
+			require.Equal(t, expected, Top10(textSpec))
+		}
+	})
+
+	t.Run("first lexicographical words with the same count", func(t *testing.T) {
+		expected := []string{
+			"bbb", // 4
+			"ccc", // 4
+			"ddd", // 4
+			"eee", // 4
+			"fff", // 4
+			"ggg", // 4
+			"hhh", // 4
+			"iii", // 4
+			"jjj", // 4
+			"kkk", // 4
+		}
+		require.Equal(t, expected, Top10(textLexical))
+	})
+
+	t.Run("case sensitive", func(t *testing.T) {
+		if taskWithAsteriskIsCompleted {
+			expected := []string{
+				"опыт", // 2
+				"vs",   // 1
+			}
+			require.Equal(t, expected, Top10(textCase))
+		} else {
+			expected := []string{
+				"vs",   // 1
+				"Опыт", // 1
+				"опыт", // 1
+			}
+			require.Equal(t, expected, Top10(textCase))
+		}
 	})
 
 	t.Run("positive test", func(t *testing.T) {
@@ -78,5 +159,15 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+}
+
+func TestMin(t *testing.T) {
+	t.Run("only one element", func(t *testing.T) {
+		require.Equal(t, min(5), 5)
+	})
+
+	t.Run("several elements", func(t *testing.T) {
+		require.Equal(t, min(58, -26, 0, 5), -26)
 	})
 }
