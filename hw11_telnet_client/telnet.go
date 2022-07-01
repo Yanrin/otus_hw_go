@@ -10,14 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TelnetClient interface {
-	Connect() error
-	io.Closer
-	Send() error
-	Receive() error
-}
-
-type Client struct {
+type TelnetClient struct {
 	address string
 	timeout time.Duration
 	in      io.ReadCloser
@@ -25,8 +18,8 @@ type Client struct {
 	conn    net.Conn
 }
 
-func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	return &Client{
+func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) *TelnetClient {
+	return &TelnetClient{
 		address: address,
 		timeout: timeout,
 		in:      in,
@@ -34,7 +27,7 @@ func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, ou
 	}
 }
 
-func (c *Client) Connect() error {
+func (c *TelnetClient) Connect() error {
 	conn, err := net.DialTimeout("tcp", c.address, c.timeout)
 	if err != nil {
 		return errors.WithMessage(err, "connection failed")
@@ -45,7 +38,7 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-func (c *Client) Send() error {
+func (c *TelnetClient) Send() error {
 	if _, err := io.Copy(c.conn, c.in); err != nil {
 		return errors.WithMessage(err, "can't send")
 	}
@@ -53,7 +46,7 @@ func (c *Client) Send() error {
 	return nil
 }
 
-func (c *Client) Receive() error {
+func (c *TelnetClient) Receive() error {
 	if _, err := io.Copy(c.out, c.conn); err != nil {
 		return errors.WithMessage(err, "can't receive")
 	}
@@ -61,7 +54,7 @@ func (c *Client) Receive() error {
 	return nil
 }
 
-func (c *Client) Close() error {
+func (c *TelnetClient) Close() error {
 	if err := c.conn.Close(); err != nil {
 		return errors.Wrap(err, "close connection error")
 	}
