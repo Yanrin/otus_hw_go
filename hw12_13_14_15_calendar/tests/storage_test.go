@@ -60,13 +60,15 @@ func TestConnection(t *testing.T) {
 		_, err := memory.NewConnection()
 		require.NoError(t, err)
 	})
-	t.Run("sqls", func(t *testing.T) {
-		cfg, err := config.New(cfgPath)
-		require.NoError(t, err)
+	if CHECKSQL {
+		t.Run("sqls", func(t *testing.T) {
+			cfg, err := config.New(cfgPath)
+			require.NoError(t, err)
 
-		_, err = sqls.NewConnection(cfg)
-		require.NoError(t, err)
-	})
+			_, err = sqls.NewConnection(cfg)
+			require.NoError(t, err)
+		})
+	}
 }
 
 func TestStorage(t *testing.T) {
