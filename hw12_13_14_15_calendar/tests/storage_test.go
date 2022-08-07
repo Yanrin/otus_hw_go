@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const CHECKSQL = false
+
 var (
 	cfgPath  = "testdata/config/config.yml"
 	userID1  = uuid.New()
@@ -74,9 +76,11 @@ func TestStorage(t *testing.T) {
 	connect, _ = memory.NewConnection()
 	connections = append(connections, ConnType{mode: "memory", storage: connect})
 
-	cfg, _ := config.New(cfgPath)
-	connect, _ = sqls.NewConnection(cfg)
-	connections = append(connections, ConnType{mode: "sqls", storage: connect})
+	if CHECKSQL {
+		cfg, _ := config.New(cfgPath)
+		connect, _ = sqls.NewConnection(cfg)
+		connections = append(connections, ConnType{mode: "sqls", storage: connect})
+	}
 
 	for _, tc := range connections {
 		t.Run(tc.mode+"Single add/get/delete", func(t *testing.T) {
