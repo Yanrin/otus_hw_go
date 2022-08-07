@@ -1,0 +1,17 @@
+logger:
+    level: info
+    path: /tmp/calendarlogfile.log
+
+storage_mode: in_memory
+
+http:
+  host: localhost
+  port: 8080
+
+database:
+  name: otusdb
+  host: localhost
+  port: 5432
+  user: otus
+  password: otuspass
+  driver: postgres
