@@ -3,21 +3,25 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	commonLog "log"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/app"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/config"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/logger"
+	httpserver "github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/storage/model"
+	"github.com/Yanrin/otus_hw_go/hw12_13_14_15_calendar/internal/storage/sqls"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/calendar/config.yml", "Path to configuration file")
 }
 
 func main() {
@@ -28,34 +32,67 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	// Config
+	cfg, err := config.New(configFile)
+	if err != nil {
+		commonLog.Fatal(fmt.Errorf("initialization config error: %w", err))
+		return
+	}
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	// Logger
+	log, err := logger.New(cfg)
+	if err != nil {
+		commonLog.Fatal(fmt.Errorf("initialization log error: %w", err))
+		return
+	}
 
-	server := internalhttp.NewServer(logg, calendar)
+	// Storage
+	var storage model.EventsM
+	switch cfg.StorageMode {
+	case "in_memory":
+		storage, err = memory.NewConnection()
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+	case "sql":
+		storage, err = sqls.NewConnection(cfg)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+	default:
+		log.Error("Incorrect storage mode")
+		return
+	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
+	calendarApp := app.NewCalendar(storage)
 
+	chErrors := make(chan error)
+
+	// HTTP Server
+	httpServer := httpserver.NewServer(cfg, log, calendarApp)
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		<-ctx.Done()
+		if err := httpServer.Start(ctx); err != nil {
+			chErrors <- err
+		}
+	}()
+	go func() {
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals)
+
+		<-signals
+		signal.Stop(signals)
+		cancel()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := httpServer.Stop(ctx); err != nil {
+			log.Error(fmt.Sprintf("stopping of http server error: %s", err))
+
+			return
 		}
 	}()
-
-	logg.Info("calendar is running...")
-
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
-	}
 }
